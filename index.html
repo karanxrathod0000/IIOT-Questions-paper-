@@ -1,849 +1,1030 @@
-import React, { useState, useEffect } from 'react';
-import { BookOpen, Eye, EyeOff, Menu, X, Cpu, Network, Cloud, Shield, Activity, Database, CheckCircle, Smartphone, Globe, Lock, Server, Wifi, ArrowRightLeft, Layers } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIoT Exam Preparation Portal</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .answer-content {
+            transition: all 0.3s ease-in-out;
+        }
+        .hidden-answer {
+            display: none;
+        }
+        
+        .tab-active {
+            border-bottom: 3px solid #2563eb;
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            color: #64748b;
+            font-weight: 500;
+        }
+        .tab-inactive:hover {
+            color: #334155;
+            background-color: #f1f5f9;
+        }
+        
+        .mark-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 9999px;
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans leading-relaxed">
 
-// --- ENHANCED SVG DIAGRAM COMPONENTS ---
-
-const ArchitectureDiagram = () => (
-  <svg viewBox="0 0 800 350" className="w-full h-auto bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
-    <defs>
-      <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-        <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
-      </marker>
-      <linearGradient id="edgeGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#eff6ff" />
-        <stop offset="100%" stopColor="#dbeafe" />
-      </linearGradient>
-      <linearGradient id="platGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#faf5ff" />
-        <stop offset="100%" stopColor="#f3e8ff" />
-      </linearGradient>
-      <linearGradient id="entGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#f0fdf4" />
-        <stop offset="100%" stopColor="#dcfce7" />
-      </linearGradient>
-    </defs>
-    
-    {/* Tier 1: Edge */}
-    <rect x="20" y="40" width="200" height="260" rx="10" fill="url(#edgeGrad)" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5,5" />
-    <text x="120" y="30" textAnchor="middle" className="text-sm font-bold fill-blue-800">Edge Tier (OT)</text>
-    
-    {/* Sensors/Actuators */}
-    <g transform="translate(60, 70)">
-        <rect width="120" height="60" rx="5" fill="#fff" stroke="#3b82f6" />
-        <Activity size={20} x="10" y="20" className="text-blue-600" />
-        <text x="40" y="25" className="text-xs font-bold fill-slate-700">Sensors</text>
-        <text x="40" y="45" className="text-[10px] fill-slate-500">Temp, Vibration</text>
-    </g>
-    <g transform="translate(60, 150)">
-        <rect width="120" height="60" rx="5" fill="#fff" stroke="#3b82f6" />
-        <Cpu size={20} x="10" y="20" className="text-blue-600" />
-        <text x="40" y="25" className="text-xs font-bold fill-slate-700">Actuators</text>
-        <text x="40" y="45" className="text-[10px] fill-slate-500">Motors, Valves</text>
-    </g>
-
-    {/* Tier 2: Platform */}
-    <rect x="280" y="40" width="240" height="260" rx="10" fill="url(#platGrad)" stroke="#a855f7" strokeWidth="2" strokeDasharray="5,5" />
-    <text x="400" y="30" textAnchor="middle" className="text-sm font-bold fill-purple-800">Platform Tier (IT)</text>
-
-    {/* Gateway & Network */}
-    <g transform="translate(330, 70)">
-        <rect width="140" height="70" rx="5" fill="#fff" stroke="#a855f7" />
-        <Network size={20} x="10" y="25" className="text-purple-600" />
-        <text x="40" y="25" className="text-xs font-bold fill-slate-700">IoT Gateway</text>
-        <text x="40" y="45" className="text-[10px] fill-slate-500">Protocol Translation</text>
-        <text x="40" y="58" className="text-[10px] fill-slate-500">(Zigbee → MQTT)</text>
-    </g>
-    <g transform="translate(330, 160)">
-        <rect width="140" height="60" rx="5" fill="#fff" stroke="#a855f7" />
-        <Globe size={20} x="10" y="20" className="text-purple-600" />
-        <text x="40" y="25" className="text-xs font-bold fill-slate-700">Network/Router</text>
-        <text x="40" y="45" className="text-[10px] fill-slate-500">Secure Routing</text>
-    </g>
-
-    {/* Tier 3: Enterprise */}
-    <rect x="580" y="40" width="200" height="260" rx="10" fill="url(#entGrad)" stroke="#16a34a" strokeWidth="2" strokeDasharray="5,5" />
-    <text x="680" y="30" textAnchor="middle" className="text-sm font-bold fill-green-800">Enterprise Tier (Cloud)</text>
-
-    <g transform="translate(620, 80)">
-        <rect width="120" height="80" rx="5" fill="#fff" stroke="#16a34a" />
-        <Cloud size={24} x="10" y="28" className="text-green-600" />
-        <text x="45" y="30" className="text-xs font-bold fill-slate-700">Cloud Platform</text>
-        <text x="45" y="50" className="text-[10px] fill-slate-500">Analytics, AI,</text>
-        <text x="45" y="65" className="text-[10px] fill-slate-500">Dashboards</text>
-    </g>
-    <g transform="translate(620, 180)">
-        <rect width="120" height="50" rx="5" fill="#fff" stroke="#16a34a" />
-        <Database size={20} x="10" y="15" className="text-green-600" />
-        <text x="45" y="30" className="text-xs font-bold fill-slate-700">Storage</text>
-    </g>
-
-    {/* Connections */}
-    <line x1="220" y1="100" x2="280" y2="100" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrow)" />
-    <text x="250" y="90" textAnchor="middle" className="text-[10px] font-mono fill-slate-500">Data</text>
-    
-    <line x1="520" y1="100" x2="580" y2="100" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrow)" />
-    <text x="550" y="90" textAnchor="middle" className="text-[10px] font-mono fill-slate-500">MQTT</text>
-
-    {/* Feedback Loop */}
-    <path d="M 620 200 L 550 200 L 550 250 L 250 250 L 250 180 L 220 180" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,4" markerEnd="url(#arrow)" />
-    <text x="400" y="245" textAnchor="middle" className="text-[10px] font-bold fill-red-500">Control Commands / Feedback</text>
-
-  </svg>
-);
-
-const TransducerDiagram = () => (
-  <svg viewBox="0 0 600 300" className="w-full h-auto bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
-    {/* Main Container: Transducers */}
-    <rect x="50" y="50" width="500" height="200" rx="20" fill="#f8fafc" stroke="#475569" strokeWidth="2" />
-    <text x="300" y="40" textAnchor="middle" className="text-lg font-bold fill-slate-800">Transducers</text>
-    <text x="300" y="80" textAnchor="middle" className="text-sm fill-slate-600 italic">"Any device converting energy from one form to another"</text>
-
-    {/* Sensors Group */}
-    <g transform="translate(100, 100)">
-        <circle cx="80" cy="80" r="70" fill="#eff6ff" stroke="#2563eb" strokeWidth="2" />
-        <text x="80" y="50" textAnchor="middle" className="text-md font-bold fill-blue-800">Sensors</text>
-        <text x="80" y="70" textAnchor="middle" className="text-xs fill-blue-600 font-semibold">Input Device</text>
-        <line x1="40" y1="85" x2="120" y2="85" stroke="#2563eb" strokeWidth="1" />
-        <text x="80" y="105" textAnchor="middle" className="text-[10px] fill-slate-600">Physical → Electrical</text>
-        <text x="80" y="120" textAnchor="middle" className="text-[10px] fill-slate-500">(e.g., RTD, LDR)</text>
-    </g>
-
-    {/* Actuators Group */}
-    <g transform="translate(340, 100)">
-        <circle cx="80" cy="80" r="70" fill="#f0fdf4" stroke="#16a34a" strokeWidth="2" />
-        <text x="80" y="50" textAnchor="middle" className="text-md font-bold fill-green-800">Actuators</text>
-        <text x="80" y="70" textAnchor="middle" className="text-xs fill-green-600 font-semibold">Output Device</text>
-        <line x1="40" y1="85" x2="120" y2="85" stroke="#16a34a" strokeWidth="1" />
-        <text x="80" y="105" textAnchor="middle" className="text-[10px] fill-slate-600">Electrical → Physical</text>
-        <text x="80" y="120" textAnchor="middle" className="text-[10px] fill-slate-500">(e.g., Relay, Servo)</text>
-    </g>
-
-    {/* Comparison Arrows */}
-    <path d="M 260 180 L 330 180" stroke="#64748b" strokeWidth="2" markerEnd="url(#arrow)" />
-    <text x="295" y="170" textAnchor="middle" className="text-[10px] font-bold fill-slate-500">Both are Transducers</text>
-  </svg>
-);
-
-const DigitalTwinDiagram = () => (
-  <svg viewBox="0 0 700 300" className="w-full h-auto bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
-    <defs>
-      <marker id="arrowDT" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-        <path d="M0,0 L0,6 L9,3 z" fill="#3b82f6" />
-      </marker>
-    </defs>
-    
-    {/* Physical Space */}
-    <rect x="20" y="20" width="280" height="260" rx="10" fill="#f1f5f9" stroke="#64748b" strokeWidth="2" strokeDasharray="5,5" />
-    <text x="160" y="45" textAnchor="middle" className="text-sm font-bold fill-slate-700">PHYSICAL SPACE</text>
-    
-    {/* Physical Asset */}
-    <g transform="translate(80, 100)">
-        <rect width="160" height="100" rx="5" fill="#cbd5e1" stroke="#334155" strokeWidth="2" />
-        <text x="80" y="40" textAnchor="middle" className="text-sm font-bold fill-slate-800">Physical Machine</text>
-        <circle cx="30" cy="70" r="10" fill="#ef4444" />
-        <circle cx="60" cy="70" r="10" fill="#eab308" />
-        <circle cx="90" cy="70" r="10" fill="#22c55e" />
-    </g>
-
-    {/* Virtual Space */}
-    <rect x="400" y="20" width="280" height="260" rx="10" fill="#eff6ff" stroke="#3b82f6" strokeWidth="2" strokeDasharray="5,5" />
-    <text x="540" y="45" textAnchor="middle" className="text-sm font-bold fill-blue-800">VIRTUAL SPACE</text>
-
-    {/* Digital Twin */}
-    <g transform="translate(460, 100)">
-        <rect width="160" height="100" rx="5" fill="#dbeafe" stroke="#2563eb" strokeWidth="2" />
-        <text x="80" y="40" textAnchor="middle" className="text-sm font-bold fill-blue-900">Digital Twin Model</text>
-        <text x="80" y="60" textAnchor="middle" className="text-xs fill-blue-700 font-mono">Simulations</text>
-        <text x="80" y="75" textAnchor="middle" className="text-xs fill-blue-700 font-mono">Predictions</text>
-    </g>
-
-    {/* Data Flow Arrows */}
-    {/* Arrow 1: Data */}
-    <path d="M 240 130 L 460 130" stroke="#3b82f6" strokeWidth="3" markerEnd="url(#arrowDT)" />
-    <rect x="300" y="110" width="100" height="20" rx="4" fill="#fff" stroke="#3b82f6" />
-    <text x="350" y="124" textAnchor="middle" className="text-[10px] font-bold fill-blue-600">Real-time Data</text>
-
-    {/* Arrow 2: Insights */}
-    <path d="M 460 170 L 240 170" stroke="#16a34a" strokeWidth="3" markerEnd="url(#arrow)" />
-    <rect x="300" y="175" width="100" height="20" rx="4" fill="#fff" stroke="#16a34a" />
-    <text x="350" y="189" textAnchor="middle" className="text-[10px] font-bold fill-green-600">Control / Optimization</text>
-
-  </svg>
-);
-
-const PKIDiagram = () => (
-  <svg viewBox="0 0 700 400" className="w-full h-auto bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
-     <defs>
-      <marker id="arrowPKI" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-        <path d="M0,0 L0,6 L9,3 z" fill="#475569" />
-      </marker>
-    </defs>
-    
-    {/* Device */}
-    <g transform="translate(20, 50)">
-        <rect width="120" height="300" rx="10" fill="#f8fafc" stroke="#475569" />
-        <text x="60" y="30" textAnchor="middle" className="text-sm font-bold fill-slate-800">Smart Meter</text>
-        <Shield size={24} x="48" y="50" className="text-blue-500" />
-        <rect x="10" y="100" width="100" height="40" rx="4" fill="#dbeafe" stroke="#2563eb" />
-        <text x="60" y="125" textAnchor="middle" className="text-xs font-mono fill-blue-900">Priv Key</text>
-    </g>
-
-    {/* Server */}
-    <g transform="translate(560, 50)">
-        <rect width="120" height="300" rx="10" fill="#f8fafc" stroke="#475569" />
-        <text x="60" y="30" textAnchor="middle" className="text-sm font-bold fill-slate-800">IIoT Server</text>
-        <Server size={24} x="48" y="50" className="text-purple-500" />
-    </g>
-
-    {/* Steps Overlay */}
-    <g transform="translate(180, 80)">
-        {/* Step 1 */}
-        <text x="0" y="15" className="text-xs font-bold fill-slate-500">1. Connection Request</text>
-        <line x1="0" y1="25" x2="340" y2="25" stroke="#475569" strokeWidth="2" markerEnd="url(#arrowPKI)" />
-
-        {/* Step 2 */}
-        <text x="0" y="75" className="text-xs font-bold fill-slate-500">2. Present X.509 Certificate</text>
-        <line x1="0" y1="85" x2="340" y2="85" stroke="#475569" strokeWidth="2" markerEnd="url(#arrowPKI)" />
-        <rect x="120" y="55" width="100" height="20" rx="2" fill="#fff" stroke="#f59e0b" />
-        <text x="170" y="69" textAnchor="middle" className="text-[10px] fill-amber-700">Signed by CA</text>
-
-        {/* Validation Box */}
-        <g transform="translate(350, 60)">
-            <rect width="80" height="60" rx="5" fill="#fff7ed" stroke="#f97316" strokeDasharray="2,2" />
-            <text x="40" y="25" textAnchor="middle" className="text-[9px] font-bold fill-orange-800">Validation</text>
-            <text x="40" y="40" textAnchor="middle" className="text-[8px] fill-orange-600">Check Signature</text>
-            <text x="40" y="50" textAnchor="middle" className="text-[8px] fill-orange-600">Check Expiry</text>
-        </g>
-
-        {/* Step 3 */}
-        <text x="100" y="135" className="text-xs font-bold fill-slate-500">3. Acknowledge / Session Key</text>
-        <line x1="340" y1="145" x2="0" y2="145" stroke="#475569" strokeWidth="2" markerEnd="url(#arrowPKI)" />
-
-        {/* Secure Pipe */}
-        <rect x="0" y="180" width="340" height="40" rx="5" fill="#dcfce7" stroke="#16a34a" />
-        <text x="170" y="205" textAnchor="middle" className="text-sm font-bold fill-green-800">ENCRYPTED TUNNEL (TLS)</text>
-    </g>
-  </svg>
-);
-
-
-// --- MAIN APP COMPONENT ---
-
-const QuestionCard = ({ id, title, options, children, diagram, studyMode }) => {
-  const [showAnswer, setShowAnswer] = useState(!studyMode);
-
-  useEffect(() => {
-    setShowAnswer(!studyMode);
-  }, [studyMode]);
-
-  return (
-    <div id={id} className="mb-16 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden scroll-mt-28">
-      <div className="bg-slate-50 p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-           <div className="flex items-center gap-2 mb-2">
-            <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">Question {id}</span>
-             {options && <span className="bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{options}</span>}
-           </div>
-           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h2>
-        </div>
-        {studyMode && (
-          <button 
-            onClick={() => setShowAnswer(!showAnswer)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-sm ${showAnswer ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
-          >
-            {showAnswer ? <><EyeOff size={18} /> Hide Answer</> : <><Eye size={18} /> Show Answer</>}
-          </button>
-        )}
-      </div>
-      
-      {showAnswer && (
-        <div className="p-8 animate-in fade-in duration-500 bg-white">
-          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-blue-900 prose-strong:font-extrabold">
-            {children}
-          </div>
-          {diagram && (
-            <div className="mt-10 p-6 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
-              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <Layers size={14} /> Visual Explanation
-              </h4>
-              <div className="max-w-3xl mx-auto">
-                {diagram}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const App = () => {
-  const [studyMode, setStudyMode] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('q1');
-
-  const navItems = [
-    { id: 'q1', label: 'Q1: IIoT Architecture' },
-    { id: 'q2', label: 'Q2: Sensors & Modems' },
-    { id: 'q3', label: 'Q3: Cloud & Digital Twin' },
-    { id: 'q4', label: 'Q4: Platform Selection' },
-    { id: 'q5', label: 'Q5: Integrity & PKI' },
-    { id: 'q6', label: 'Q6: Access Control' },
-    { id: 'q7', label: 'Q7: Robots & Mfg' },
-    { id: 'q8', label: 'Q8: Industry 5.0' },
-  ];
-
-  return (
-    <div className="min-h-screen bg-slate-100 font-sans text-slate-900 flex">
-      
-      {/* Sidebar Navigation */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex-shrink-0 shadow-2xl`}>
-        <div className="p-8 border-b border-slate-800 flex justify-between items-center">
-          <div>
-            <h1 className="text-white font-extrabold text-xl tracking-tight">IIoT Exam Prep</h1>
-            <p className="text-xs text-slate-400 mt-1 font-medium">Nov/Dec 2023 Solutions</p>
-          </div>
-          <button onClick={() => setMobileMenuOpen(false)} className="lg:hidden text-slate-400 hover:text-white transition-colors">
-            <X size={24} />
-          </button>
-        </div>
-        <nav className="p-4 space-y-2 overflow-y-auto h-[calc(100vh-100px)] scrollbar-thin scrollbar-thumb-slate-700">
-          {navItems.map((item) => (
-            <a 
-              key={item.id}
-              href={`#${item.id}`}
-              onClick={() => {
-                setActiveSection(item.id);
-                setMobileMenuOpen(false);
-              }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${activeSection === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 translate-x-1' : 'hover:bg-slate-800 hover:text-white hover:translate-x-1'}`}
-            >
-              <div className={`w-2 h-2 rounded-full ${activeSection === item.id ? 'bg-white' : 'bg-slate-600'}`} />
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden relative">
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex justify-between items-center shadow-sm">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setMobileMenuOpen(true)} className="lg:hidden text-slate-600 hover:text-slate-900">
-              <Menu size={24} />
-            </button>
-            <h2 className="text-lg font-bold text-slate-800 hidden sm:flex items-center gap-2">
-              <BookOpen size={20} className="text-blue-600"/>
-              Industrial Internet of Things (417523B)
-            </h2>
-          </div>
-          
-          <div className="flex items-center gap-4 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-             <span className="text-sm font-bold text-slate-700 hidden sm:block">Study Mode</span>
-             <button 
-               onClick={() => setStudyMode(!studyMode)}
-               className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${studyMode ? 'bg-blue-600' : 'bg-slate-300'}`}
-             >
-               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out shadow-sm ${studyMode ? 'translate-x-7' : 'translate-x-1'}`} />
-             </button>
-          </div>
-        </header>
-
-        <div className="max-w-5xl mx-auto p-6 lg:p-12 pb-32">
-          
-          {/* Intro Hero */}
-          <div className="mb-12 bg-gradient-to-br from-slate-900 to-blue-900 rounded-2xl p-10 text-white shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-10 opacity-10">
-              <Network size={200} />
-            </div>
-            <div className="relative z-10 flex flex-col md:flex-row items-start gap-6">
-              <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/20">
-                <BookOpen size={40} className="text-blue-300" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-extrabold mb-4 tracking-tight">Exam Solutions: Nov/Dec 2023</h1>
-                <p className="text-blue-100 text-lg leading-relaxed max-w-2xl">
-                  Comprehensive, detailed answers with enhanced technical diagrams. Designed for in-depth understanding and quick revision.
-                </p>
-                <div className="mt-6 flex flex-wrap gap-3">
-                    <span className="bg-blue-500/20 text-blue-200 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30">Detailed Explanations</span>
-                    <span className="bg-purple-500/20 text-purple-200 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/30">Interactive Diagrams</span>
-                    <span className="bg-green-500/20 text-green-200 text-xs font-bold px-3 py-1 rounded-full border border-green-500/30">Real-world Examples</span>
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-2 rounded-lg text-white">
+                        <i class="ph ph-factory text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">IIoT Master</h1>
+                        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Exam Solutions</p>
+                    </div>
                 </div>
-              </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                        <span class="text-sm font-bold text-slate-700">Study Mode</span>
+                        <button id="studyModeToggle" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span id="toggleKnob" class="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1 shadow"></span>
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          {/* Q1 */}
-          <QuestionCard 
-            id="q1" 
-            title="IIoT Components & Architecture" 
-            options="Option A"
-            studyMode={studyMode}
-            diagram={<ArchitectureDiagram />}
-          >
-            <h3 className="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">a) Describe the functions of the following IIoT components: (6 Marks)</h3>
             
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-md font-bold text-blue-700 mb-1">i) Sensors (The Perception Layer)</h4>
-                <p>Sensors are the fundamental starting point of any IIoT system. They act as the interface between the physical world and the digital world.</p>
-                <ul className="list-disc pl-5 space-y-1 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                  <li><strong>Function:</strong> Transduction. They convert physical parameters (Heat, Pressure, Light) into analog or digital electrical signals.</li>
-                  <li><strong>Industrial Examples:</strong> 
-                    <br/>- <em>Thermocouples</em> (Type K) for measuring furnace temperatures.
-                    <br/>- <em>Piezoelectric Sensors</em> for detecting vibration in rotating motors (predictive maintenance).
-                  </li>
-                  <li><strong>Role:</strong> Without sensors, the system is "blind." They provide the raw data required for analytics.</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-md font-bold text-purple-700 mb-1">ii) Gateways (The Bridge)</h4>
-                <p>Gateways are critical intermediaries that sit between the rugged factory floor (OT) and the enterprise network (IT).</p>
-                <ul className="list-disc pl-5 space-y-1 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                  <li><strong>Protocol Translation:</strong> They convert legacy industrial protocols (e.g., Modbus, Profibus, CAN bus) into IP-based web protocols (e.g., MQTT, HTTP/REST) understood by the cloud.</li>
-                  <li><strong>Data Aggregation & Filtering:</strong> Instead of sending every millisecond of data, gateways average or filter data at the edge to save bandwidth and cloud costs (Edge Computing).</li>
-                  <li><strong>Security:</strong> They act as a firewall, encrypting data (TLS/SSL) before it leaves the factory premises.</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-md font-bold text-green-700 mb-1">iii) Routers (The Traffic Controllers)</h4>
-                <p>Routers operate at the Network Layer (Layer 3 of OSI) to manage data traffic between different networks.</p>
-                <ul className="list-disc pl-5 space-y-1 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                  <li><strong>Routing:</strong> Determining the optimal path for data packets to travel from the factory gateway to the remote cloud server IP address.</li>
-                  <li><strong>Network Segmentation:</strong> In IIoT, routers are used to separate critical control networks (OT) from the office network (IT) to prevent cyber attacks from spreading.</li>
-                  <li><strong>Connectivity:</strong> They manage WAN connections (Fiber, 4G/5G, Satellite) ensuring persistent internet access.</li>
-                </ul>
-              </div>
+            <!-- Tabs -->
+            <div class="flex gap-2 mt-2 px-2 overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('nov2023')" id="tab-nov2023" class="pb-3 px-4 text-sm tab-active transition-all">Nov/Dec 2023 (70 Marks)</button>
+                <button onclick="switchTab('may2024')" id="tab-may2024" class="pb-3 px-4 text-sm tab-inactive transition-all">May/Jun 2024 (70 Marks)</button>
             </div>
+        </div>
+    </nav>
 
-            <div className="my-8 border-t border-slate-200"></div>
-
-            <h3 className="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">b) What is a cloud broker and is it used in IIoT? (6 Marks)</h3>
-            <p className="mb-4"><strong>Definition:</strong> A Cloud Broker is a third-party entity or software middleware that manages the use, performance, and delivery of cloud services. It negotiates relationships between Cloud Providers (e.g., AWS, Azure) and Cloud Consumers (the Factory).</p>
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
-               <strong>Is it used in IIoT? YES.</strong>
-               <p className="mt-2 text-sm">In modern Industry 4.0, companies rarely use just one cloud. They use a <strong>Multi-Cloud Strategy</strong>.</p>
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-32">
+        
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 rounded-2xl p-8 mb-10 text-white shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10">
+                <i class="ph ph-circuitry text-9xl"></i>
             </div>
-            <p><strong>Key Functions in IIoT:</strong></p>
-            <ul className="list-disc pl-5 space-y-2">
-                <li><strong>Service Intermediation:</strong> Improving capabilities of a service (e.g., adding a unified security layer on top of raw AWS storage).</li>
-                <li><strong>Service Aggregation:</strong> Combining services from different vendors (e.g., using Google for AI analytics but Azure for database storage) into a single dashboard.</li>
-                <li><strong>Service Arbitrage:</strong> Dynamically switching between providers to get the best price or lowest latency for data transmission.</li>
-            </ul>
+            <div class="relative z-10">
+                <h2 class="text-3xl font-bold mb-3">Comprehensive Exam Solutions</h2>
+                <p class="text-blue-100 max-w-2xl text-lg">Detailed, mark-oriented answers for Artificial Intelligence & Data Science (417523B). Toggle "Study Mode" to simulate exam conditions.</p>
+                <div class="mt-6 flex gap-3">
+                    <span class="bg-white/10 px-3 py-1 rounded text-sm border border-white/20">Updated: Dec 2025</span>
+                    <span class="bg-white/10 px-3 py-1 rounded text-sm border border-white/20">Includes Diagrams</span>
+                </div>
+            </div>
+        </div>
 
-            <div className="my-8 border-t border-slate-200"></div>
-
-            <h3 className="text-lg font-bold text-slate-800 border-l-4 border-blue-500 pl-3 mb-4">c) How can WSNs be used to collect data? (6 Marks)</h3>
-            <p><strong>Wireless Sensor Networks (WSNs)</strong> refer to a network of spatially distributed autonomous devices using sensors to monitor physical or environmental conditions.</p>
+        <!-- ================= NOV/DEC 2023 PAPER ================= -->
+        <div id="content-nov2023" class="space-y-12">
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="bg-slate-50 p-4 rounded border border-slate-200">
-                    <strong>Architecture & Protocols</strong>
-                    <ul className="text-sm list-disc pl-4 mt-2">
-                        <li><strong>Topologies:</strong> Star, Mesh (most common in industry for reliability), or Cluster tree.</li>
-                        <li><strong>Protocols:</strong> Zigbee (IEEE 802.15.4), WirelessHART, LoRaWAN, ISA100.11a.</li>
-                        <li><strong>Components:</strong> Sensor Nodes (motes) and a Sink Node (Gateway).</li>
-                    </ul>
+            <!-- Q1 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q1 (Option A)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Architecture Components & WSN</h3>
+                    </div>
                 </div>
-                <div className="bg-slate-50 p-4 rounded border border-slate-200">
-                    <strong>Industrial Use Cases</strong>
-                    <ul className="text-sm list-disc pl-4 mt-2">
-                        <li><strong>Rotating Machinery:</strong> monitoring vibration on motors where wires would twist and break.</li>
-                        <li><strong>Hazardous Areas:</strong> Chemical tanks where running conduit is expensive or dangerous.</li>
-                        <li><strong>Vast Areas:</strong> Pipelines or agriculture fields (using LoRaWAN for km-range).</li>
-                    </ul>
-                </div>
-            </div>
-          </QuestionCard>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-blue-500 pl-3">
+                                a) Describe the functions of: i) Sensors, ii) Gateways, iii) Routers <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-3 space-y-2">
+                                <li><strong>i) Sensors (The Perception Layer):</strong> The "eyes and ears" of IIoT.
+                                    <br><em>Function:</em> Transduction (Physical → Electrical). They detect changes in environment (Temp, Pressure, Vibration).
+                                    <br><em>Role:</em> Provide the raw data foundation. Example: Piezoelectric sensors for motor vibration analysis.
+                                </li>
+                                <li><strong>ii) Gateways (The Bridge):</strong> Connects OT (Operational Tech) to IT (Information Tech).
+                                    <br><em>Function:</em> Protocol Translation (e.g., Modbus/Zigbee → MQTT/HTTP), Data Aggregation (filtering noise), and basic Security (Encryption).
+                                    <br><em>Role:</em> Decouples the edge devices from the cloud, saving bandwidth.
+                                </li>
+                                <li><strong>iii) Routers (The Network Layer):</strong> Directs traffic across networks.
+                                    <br><em>Function:</em> Packet switching based on IP addresses. Manages WAN connectivity (4G/Fiber).
+                                    <br><em>Role:</em> Ensures secure, reliable data paths between the factory LAN and the Cloud/Internet.
+                                </li>
+                            </ul>
+                        </div>
 
-          {/* Q2 */}
-          <QuestionCard 
-            id="q2" 
-            title="Modems, Servers & Transducers" 
-            options="Option B"
-            studyMode={studyMode}
-            diagram={<TransducerDiagram />}
-          >
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 mb-4">a) Functions of Components (6 Marks)</h3>
-             <ul className="list-disc pl-5 space-y-4">
-               <li>
-                 <strong>i) Modems (Modulator-Demodulator):</strong>
-                 <br/> unlike a simple router, a modem converts digital signals from the router into analog signals for transmission over telephone lines, cable, or radio waves. In IIoT, <strong>Cellular Modems (4G/LTE/5G/NB-IoT)</strong> are crucial for remote assets (e.g., a wind turbine in a field) to connect to the internet where no ethernet exists.
-               </li>
-               <li>
-                 <strong>ii) Cloud Brokers:</strong>
-                 <br/> (Refer to Q1b). They simplify the management of complex, multi-vendor cloud environments, providing a single point of entry and billing for the industrial enterprise.
-               </li>
-               <li>
-                 <strong>iii) Servers (The Brains):</strong>
-                 <br/> High-performance computing devices.
-                 <br/> - <strong>Edge Servers:</strong> Located on the factory floor for low-latency processing (e.g., robotic arm control).
-                 <br/> - <strong>Cloud Servers:</strong> Located in data centers for Big Data storage, historical trend analysis, and training Deep Learning models.
-               </li>
-             </ul>
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-blue-500 pl-3">
+                                b) What is a cloud broker and is it used in IIoT? <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Definition:</strong> A cloud broker is a third-party entity or middleware that manages the use, performance, and delivery of cloud services. It negotiates relationships between cloud providers (AWS, Azure) and cloud consumers (The Factory).</p>
+                            <p class="mt-2 font-semibold text-slate-800">Is it used in IIoT? YES.</p>
+                            <p>It is crucial for <strong>Multi-Cloud Strategies</strong> where a company might use AWS for storage and Azure for AI. The broker handles:</p>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>Service Intermediation:</strong> Adding value (e.g., unified identity management) on top of raw services.</li>
+                                <li><strong>Service Aggregation:</strong> Combining services from multiple vendors into one dashboard.</li>
+                                <li><strong>Service Arbitrage:</strong> Dynamically switching providers for cost/performance.</li>
+                            </ul>
+                        </div>
 
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 mb-4">b) Sensor vs. Transducer (6 Marks)</h3>
-             <div className="bg-orange-50 border-l-4 border-orange-400 p-4 mb-4">
-                <strong>Core Concept:</strong> All sensors are transducers, but not all transducers are sensors.
-             </div>
-             <table className="w-full text-sm text-left border-collapse">
-                <thead>
-                    <tr className="bg-slate-100 border-b border-slate-300">
-                        <th className="p-3 font-bold">Feature</th>
-                        <th className="p-3 font-bold">Transducer</th>
-                        <th className="p-3 font-bold">Sensor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr className="border-b border-slate-100">
-                        <td className="p-3 font-semibold">Definition</td>
-                        <td className="p-3">A device that converts energy from one form to another.</td>
-                        <td className="p-3">A device that detects a physical quantity and converts it to a readable signal.</td>
-                    </tr>
-                    <tr className="border-b border-slate-100">
-                        <td className="p-3 font-semibold">Direction</td>
-                        <td className="p-3">Bidirectional concept (Input or Output).</td>
-                        <td className="p-3">Input only (Sensing).</td>
-                    </tr>
-                    <tr className="border-b border-slate-100">
-                        <td className="p-3 font-semibold">Examples</td>
-                        <td className="p-3">Loudspeaker (Elec → Sound), Motor (Elec → Mech).</td>
-                        <td className="p-3">Thermistor (Heat → Res), Microphone (Sound → Elec).</td>
-                    </tr>
-                </tbody>
-             </table>
-
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-emerald-500 pl-3 mb-4">c) Importance of Data Filtering & Aggregation (6 Marks)</h3>
-             <p>Industrial sensors can generate thousands of data points per second. Sending raw data to the cloud is inefficient.</p>
-             <ul className="list-disc pl-5 space-y-2 mt-2">
-               <li><strong>1. Bandwidth Optimization:</strong> Industrial internet plans (Satellite/Cellular) are expensive. Filtering removes noise (e.g., "temperature hasn't changed") reducing data volume by up to 90%.</li>
-               <li><strong>2. Latency Reduction:</strong> Critical decisions (e.g., "Shut down overheating motor") must happen at the <strong>Edge</strong>. Waiting for cloud processing takes too long (latency).</li>
-               <li><strong>3. Data Quality:</strong> Aggregation (e.g., sending the 1-minute average instead of 600 raw readings) makes the data cleaner and easier for the cloud database to index and query.</li>
-             </ul>
-          </QuestionCard>
-
-          {/* Q3 */}
-          <QuestionCard 
-            id="q3" 
-            title="Cloud Platforms & Digital Twin" 
-            options="Option A"
-            studyMode={studyMode}
-            diagram={<DigitalTwinDiagram />}
-          >
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-indigo-500 pl-3 mb-4">a) Remote Monitoring & Control (6 Marks)</h3>
-             <p>IIoT platforms allow engineers to manage assets without being physically present.</p>
-             <ul className="list-disc pl-5 space-y-2">
-                <li><strong>Telemetry Ingestion:</strong> The platform receives live data streams (via MQTT/AMQP) from the gateway.</li>
-                <li><strong>Visualization:</strong> Operators use <strong>HMI (Human Machine Interface) Dashboards</strong> to see gauges, graphs, and maps of asset health in real-time.</li>
-                <li><strong>Command & Control:</strong> The platform can send <strong>downstream commands</strong>. For example, an operator in Pune can click "Reset" on a dashboard, and the platform sends a command to a machine in a German factory to restart.</li>
-             </ul>
-
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-indigo-500 pl-3 mb-4">b) Designing a Digital Twin (6 Marks)</h3>
-             <p>A Digital Twin is a dynamic virtual representation of a physical object or system.</p>
-             <div className="bg-slate-50 p-5 rounded-lg border border-slate-200 space-y-3">
-                <div className="flex gap-3">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">1</div>
-                    <p><strong>Physical Definition:</strong> Define the asset's physics, geometry, and materials (e.g., CAD models of a turbine).</p>
-                </div>
-                <div className="flex gap-3">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">2</div>
-                    <p><strong>Data Integration:</strong> Map sensor data (IoT) to the virtual model's parameters. If the physical turbine spins at 5000 RPM, the virtual one must too.</p>
-                </div>
-                <div className="flex gap-3">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">3</div>
-                    <p><strong>Behavioral Modeling:</strong> Apply physics engines or ML models to simulate how the object reacts to stress, heat, or wear.</p>
-                </div>
-                <div className="flex gap-3">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm shrink-0">4</div>
-                    <p><strong>Application:</strong> Use the twin for "What-If" simulations (e.g., "What happens if we increase load by 10%?").</p>
-                </div>
-             </div>
-
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-indigo-500 pl-3 mb-4">c) Platform Comparison (6 Marks)</h3>
-             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse min-w-[500px]">
-                    <thead>
-                        <tr className="bg-slate-800 text-white">
-                            <th className="p-3">Platform</th>
-                            <th className="p-3">Key Focus</th>
-                            <th className="p-3">Unique Strength</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr className="border-b">
-                            <td className="p-3 font-bold text-blue-700">GE Predix</td>
-                            <td className="p-3">Heavy Industrial Assets (Aviation, Power, Rail).</td>
-                            <td className="p-3"><strong>Asset Performance Management (APM):</strong> Best-in-class physics-based digital twins.</td>
-                        </tr>
-                        <tr className="border-b bg-slate-50">
-                            <td className="p-3 font-bold text-green-700">PTC ThingWorx</td>
-                            <td className="p-3">Manufacturing & Service (Factory Floor).</td>
-                            <td className="p-3"><strong>Rapid Dev & AR:</strong> Drag-and-drop IoT app building + Vuforia for Augmented Reality overlays.</td>
-                        </tr>
-                        <tr className="border-b">
-                            <td className="p-3 font-bold text-indigo-700">Microsoft Azure IoT</td>
-                            <td className="p-3">Enterprise IT & Scalability.</td>
-                            <td className="p-3"><strong>Integration:</strong> Seamless link with Office 365, Dynamics, and massive global scale (Hyperscaler).</td>
-                        </tr>
-                    </tbody>
-                </table>
-             </div>
-          </QuestionCard>
-
-          {/* Q4 */}
-          <QuestionCard 
-            id="q4" 
-            title="Platform Selection & Security" 
-            options="Option B"
-            studyMode={studyMode}
-          >
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-pink-500 pl-3 mb-4">a) Key Factors for Platform Selection (6 Marks)</h3>
-             <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <li className="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
-                 <strong className="text-pink-700">1. Scalability</strong>
-                 <p className="text-sm mt-1">The platform must handle growth from 100 devices to 1,000,000 devices without crashing or slowing down.</p>
-               </li>
-               <li className="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
-                 <strong className="text-pink-700">2. Interoperability</strong>
-                 <p className="text-sm mt-1">Must support open standards (OPC-UA, MQTT) to talk to machines from different vendors (Siemens, Rockwell, Fanuc).</p>
-               </li>
-               <li className="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
-                 <strong className="text-pink-700">3. Security</strong>
-                 <p className="text-sm mt-1">Must provide End-to-End encryption (Data in transit) and secure Key Management (Hardware Security Modules).</p>
-               </li>
-               <li className="bg-white p-4 rounded-lg shadow-sm border border-slate-100">
-                 <strong className="text-pink-700">4. Edge Capabilities</strong>
-                 <p className="text-sm mt-1">Does it support running logic offline (at the edge) if the internet cuts out?</p>
-               </li>
-             </ul>
-
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-pink-500 pl-3 mb-4">b) Digital Twin on Cloud: Challenges & Benefits (6 Marks)</h3>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h4 className="font-bold text-green-700 mb-2 flex items-center gap-2"><CheckCircle size={16}/> Benefits</h4>
-                    <ul className="list-disc pl-5 text-sm space-y-2">
-                        <li><strong>Infinite Compute:</strong> Clouds provide the massive CPU/GPU power needed for complex finite element analysis simulations.</li>
-                        <li><strong>Historical Context:</strong> Clouds can store petabytes of history, allowing the twin to learn from years of past data.</li>
-                        <li><strong>Accessibility:</strong> Experts from anywhere in the world can view and analyze the same twin.</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 className="font-bold text-red-700 mb-2 flex items-center gap-2"><X size={16}/> Challenges</h4>
-                    <ul className="list-disc pl-5 text-sm space-y-2">
-                        <li><strong>Latency:</strong> The "Twin" might be 500ms behind reality due to network lag, making it useless for real-time safety control.</li>
-                        <li><strong>Data Volume:</strong> Streaming full-fidelity vibration data is extremely expensive ($$$).</li>
-                        <li><strong>IP Risk:</strong> Uploading high-fidelity CAD models of proprietary machines to a public cloud risks IP theft.</li>
-                    </ul>
-                </div>
-             </div>
-
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-pink-500 pl-3 mb-4">c) Security & Privacy Challenges (6 Marks)</h3>
-             <p><strong>1. Data Sovereignty & Residency:</strong> Laws like GDPR (Europe) require data to stay within country borders. Managing a global IIoT fleet across different legal zones is complex.</p>
-             <p className="mt-2"><strong>2. Multi-tenancy Risks:</strong> Public clouds are "Multi-tenant" (Shared). A vulnerability in the cloud hypervisor could theoretically allow a hacker to jump from one customer's container to another.</p>
-             <p className="mt-2"><strong>3. API Vulnerabilities:</strong> Cloud platforms interact via APIs. If an API Key is hardcoded in firmware or leaked, hackers can gain full control over industrial assets.</p>
-          </QuestionCard>
-
-           {/* Q5 */}
-           <QuestionCard 
-            id="q5" 
-            title="Message Integrity & Identity" 
-            options="Option A"
-            studyMode={studyMode}
-            diagram={<PKIDiagram />}
-          >
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-amber-500 pl-3 mb-4">a) Message Integrity Mechanisms (9 Marks)</h3>
-             <p className="mb-4">How do we ensure a message sent from a sensor (Temp=50) isn't changed by a hacker (Temp=0) during transit?</p>
-             
-             <div className="space-y-4">
-                <div className="p-4 border border-slate-200 rounded-lg">
-                    <strong className="text-lg">1. Checksums (e.g., CRC - Cyclic Redundancy Check)</strong>
-                    <p className="text-sm text-slate-600 mt-1">Mathematical sum of data bits. <br/><em>Pros:</em> Fast, good for detecting accidental noise. <br/><em>Cons:</em> <strong>Not Secure.</strong> A hacker can change the data and easily recalculate the new checksum.</p>
-                </div>
-                <div className="p-4 border border-slate-200 rounded-lg bg-amber-50">
-                    <strong className="text-lg text-amber-900">2. MAC (Message Authentication Code)</strong>
-                    <p className="text-sm text-slate-600 mt-1">Uses a <strong>Secret Key</strong> + Data to generate a tag. <br/><em>Pros:</em> Verifies both Integrity and Authenticity. <br/><em>Cons:</em> Key management is hard (both sides need the same key).</p>
-                </div>
-                <div className="p-4 border border-slate-200 rounded-lg bg-green-50">
-                    <strong className="text-lg text-green-900">3. Digital Signatures (Asymmetric)</strong>
-                    <p className="text-sm text-slate-600 mt-1">Sender signs with <strong>Private Key</strong>. Receiver verifies with <strong>Public Key</strong>. <br/><em>Pros:</em> <strong>Non-Repudiation</strong> (Sender cannot deny sending it). Highest security. <br/><em>Cons:</em> Computationally heavy for small sensors.</p>
-                </div>
-             </div>
-
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-amber-500 pl-3 mb-4">b) Identity Establishment for Smart Meter (8 Marks)</h3>
-             <div className="bg-slate-50 p-4 rounded mb-4">
-                 <strong>Scenario:</strong> A Smart Meter must prove it is a legitimate device authorized by the utility company before uploading billing data.
-             </div>
-             <p><strong>Mechanism: Public Key Infrastructure (PKI) with X.509 Certificates.</strong></p>
-             <p className="mt-2 font-bold text-slate-700">Implementation Steps:</p>
-             <ol className="list-decimal pl-5 space-y-2 mt-2">
-                 <li><strong>Manufacturing:</strong> The utility company acts as a Certificate Authority (CA). They burn a unique private key and a signed digital certificate (X.509) into the meter's secure storage (TPM chip).</li>
-                 <li><strong>Deployment:</strong> The meter is installed at a home.</li>
-                 <li><strong>Handshake (TLS):</strong> When the meter connects to the grid server, it presents its Certificate.</li>
-                 <li><strong>Verification:</strong> The server checks the digital signature on the certificate against its own CA records. If valid, trust is established.</li>
-                 <li><strong>Result:</strong> Rogue devices cannot connect because they lack a certificate signed by the utility company.</li>
-             </ol>
-          </QuestionCard>
-
-          {/* Q6 */}
-          <QuestionCard 
-            id="q6" 
-            title="Access Control & Hashing" 
-            options="Option B"
-            studyMode={studyMode}
-          >
-            <h3 className="text-lg font-bold text-slate-800 border-l-4 border-cyan-500 pl-3 mb-4">a) Definitions (9 Marks)</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h4 className="font-bold text-cyan-700 mb-2">i) Identity Establishment (Authentication)</h4>
-                    <p>The process of answering: <strong>"Who are you?"</strong></p>
-                    <p className="text-sm mt-2">It involves verifying the credentials of a user or device (e.g., Passwords, Bio-metrics, Digital Certificates) to ensure they are a legitimate entity in the system.</p>
-                </div>
-                <div>
-                    <h4 className="font-bold text-cyan-700 mb-2">ii) Access Control (Authorization)</h4>
-                    <p>The process of answering: <strong>"What are you allowed to do?"</strong></p>
-                    <p className="text-sm mt-2">Once identified, this determines privileges. For example, a "Operator" can <em>Read</em> sensor data, but only an "Admin" can <em>Update</em> the firmware.</p>
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-blue-500 pl-3">
+                                c) How can WSNs be used to collect data from industrial environments? <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Wireless Sensor Networks (WSN):</strong> Distributed autonomous sensors (nodes) that monitor physical conditions and pass data wirelessly to a gateway.</p>
+                            <div class="grid md:grid-cols-2 gap-4 mt-3">
+                                <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                                    <strong class="text-sm uppercase text-slate-500">Applications</strong>
+                                    <ul class="list-disc pl-4 text-sm mt-2">
+                                        <li><strong>Rotating Machinery:</strong> Monitoring motors/turbines where wires would break.</li>
+                                        <li><strong>Hazardous Areas:</strong> Chemical tanks or nuclear sites where cabling is dangerous.</li>
+                                        <li><strong>Large Scale:</strong> Pipelines or Agriculture (LoRaWAN).</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                                    <strong class="text-sm uppercase text-slate-500">Advantages</strong>
+                                    <ul class="list-disc pl-4 text-sm mt-2">
+                                        <li>Low installation cost (No wires).</li>
+                                        <li>Scalability (Mesh topology).</li>
+                                        <li>Flexibility in deployment.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="my-8 border-t border-slate-200"></div>
+            <!-- Q2 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q2 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Modems, Transducers & Data Processing</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                a) Describe functions of: i) Modems, ii) Cloud brokers, iii) Servers <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-3 space-y-2">
+                                <li><strong>i) Modems (Modulator-Demodulator):</strong> Converts digital data to analog for transmission over phone/radio lines. In IIoT, <strong>Cellular Modems (LTE/5G/NB-IoT)</strong> are vital for connecting remote assets (e.g., wind turbines) where no Ethernet exists.</li>
+                                <li><strong>ii) Cloud Brokers:</strong> (See Q1b). They act as intermediaries to simplify the management of complex, multi-vendor cloud environments, providing a single point of entry and billing.</li>
+                                <li><strong>iii) Servers (The Brains):</strong> High-performance computing units.
+                                    <br> - <em>Edge Servers:</em> Process data locally for low latency (robotic control).
+                                    <br> - <em>Cloud Servers:</em> Store massive historical data and run AI training models.
+                                </li>
+                            </ul>
+                        </div>
 
-            <h3 className="text-lg font-bold text-slate-800 border-l-4 border-cyan-500 pl-3 mb-4">b) Ensuring Integrity (8 Marks)</h3>
-            <p className="mb-4"><strong>Technique: Cryptographic Hashing (SHA-256).</strong></p>
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <p><strong>The Process:</strong></p>
-                <ol className="list-decimal pl-5 mt-2 space-y-2 text-sm">
-                    <li><strong>Sender:</strong> Takes the message "Pump On" and runs it through a Hash Algorithm → generates "X9D7..." (Hash).</li>
-                    <li><strong>Transmission:</strong> Sends both "Pump On" + "X9D7..." to the receiver.</li>
-                    <li><strong>Receiver:</strong> Takes the received "Pump On" and runs it through the same algorithm → generates "X9D7...".</li>
-                    <li><strong>Comparison:</strong> 
-                        <br/>- If Match: Integrity Confirmed. 
-                        <br/>- If Mismatch (e.g., Hash is "A1B2..."): The message was corrupted or tampered with.
-                    </li>
-                </ol>
-                <div className="mt-3 text-xs text-slate-500 bg-white p-2 rounded">
-                    *Note: To prevent a hacker from modifying the message AND recalculating the hash, we use <strong>HMAC</strong> (Hash-based Message Authentication Code), which mixes a secret key into the hash.
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                b) Explain the difference between a sensor and a transducer <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <table class="w-full text-sm text-left border border-slate-200 mt-3">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="p-3 border">Feature</th>
+                                        <th class="p-3 border">Transducer</th>
+                                        <th class="p-3 border">Sensor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="p-3 border font-semibold">Definition</td>
+                                        <td class="p-3 border">Device converting energy from one form to another.</td>
+                                        <td class="p-3 border">Device detecting a physical parameter and converting it to a signal.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border font-semibold">Scope</td>
+                                        <td class="p-3 border">Broad category (includes actuators).</td>
+                                        <td class="p-3 border">Sub-category of transducers (Input only).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border font-semibold">Examples</td>
+                                        <td class="p-3 border">Loudspeaker (Elec → Sound), Motor.</td>
+                                        <td class="p-3 border">Thermocouple (Heat → Elec), Mic.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="mt-2 text-sm italic">"All sensors are transducers, but not all transducers are sensors."</p>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                c) Importance of data filtering and aggregation at the IIoT layer <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2">Industrial machines generate massive raw data (Big Data). Sending it all to the cloud is inefficient.</p>
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li><strong>Bandwidth Efficiency:</strong> Reduces cost by not sending noise (e.g., "temperature steady" 1000 times/sec). Reduces data volume by up to 90%.</li>
+                                <li><strong>Latency Reduction:</strong> Enables immediate reaction at the Edge (e.g., emergency stop) without waiting for cloud round-trip.</li>
+                                <li><strong>Data Quality:</strong> Aggregation (e.g., 1-minute averages) creates cleaner datasets for analytics.</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-          </QuestionCard>
 
-          {/* Q7 */}
-          <QuestionCard 
-            id="q7" 
-            title="Robotics & Cyber Manufacturing" 
-            options="Option A"
-            studyMode={studyMode}
-          >
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-red-500 pl-3 mb-4">a) Smart Robots in Industry (9 Marks)</h3>
-             <ul className="list-disc pl-5 space-y-3">
-               <li>
-                 <strong>Collaborative Robots (Cobots):</strong>
-                 <br/> Unlike old cage-robots, Cobots have sensors to detect humans. They slow down or stop if a human gets close. This allows humans and robots to work together on the same assembly line (Human: Dexterity, Robot: Strength).
-               </li>
-               <li>
-                 <strong>Autonomous Mobile Robots (AMRs):</strong>
-                 <br/> Robots that move materials around a warehouse without magnetic tape on the floor. They use LIDAR/SLAM to navigate like a self-driving car.
-               </li>
-               <li>
-                 <strong>Precision & Consistency:</strong>
-                 <br/> Robots can weld a seam with sub-millimeter accuracy 1000 times in a row without getting tired, drastically reducing defect rates (Six Sigma).
-               </li>
-             </ul>
-
-             <div className="my-8 border-t border-slate-200"></div>
-
-             <h3 className="text-lg font-bold text-slate-800 border-l-4 border-red-500 pl-3 mb-4">b) Cyber Manufacturing Systems (8 Marks)</h3>
-             <p><strong>Definition:</strong> A manufacturing environment where physical components are seamlessly integrated with computational algorithms and the internet (CPS - Cyber Physical Systems).</p>
-             <div className="mt-4 grid md:grid-cols-2 gap-4">
-                 <div className="p-3 bg-green-50 rounded border border-green-100">
-                     <strong>Benefits</strong>
-                     <ul className="text-sm list-disc pl-4 mt-1">
-                        <li><strong>Batch Size of One:</strong> Machines auto-reconfigure to make custom products for each customer.</li>
-                        <li><strong>Predictive Maintenance:</strong> Machines order their own spare parts before breaking.</li>
-                     </ul>
-                 </div>
-                 <div className="p-3 bg-red-50 rounded border border-red-100">
-                     <strong>Challenges</strong>
-                     <ul className="text-sm list-disc pl-4 mt-1">
-                        <li><strong>Ransomware:</strong> If the factory is online, it can be hacked (e.g., Colonial Pipeline attack).</li>
-                        <li><strong>Skill Gap:</strong> Requires workers who know both mechanics AND coding.</li>
-                     </ul>
-                 </div>
-             </div>
-          </QuestionCard>
-
-          {/* Q8 */}
-          <QuestionCard 
-            id="q8" 
-            title="Industry 5.0 & Smart Applications" 
-            options="Option B"
-            studyMode={studyMode}
-          >
-            <h3 className="text-lg font-bold text-slate-800 border-l-4 border-teal-500 pl-3 mb-4">a) Industry 5.0 (Society 5.0) (9 Marks)</h3>
-            <div className="flex flex-col md:flex-row gap-6 items-center mb-6">
-                <div className="bg-slate-200 p-4 rounded-lg text-center w-full md:w-1/3 opacity-70">
-                    <strong>Industry 4.0</strong>
-                    <p className="text-xs mt-1">Focus: Automation, IoT, Efficiency, removing humans.</p>
+            <!-- Q3 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q3 (Option A)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Cloud Platforms & Digital Twins</h3>
+                    </div>
                 </div>
-                <ArrowRightLeft className="text-slate-400" />
-                <div className="bg-teal-100 p-4 rounded-lg text-center w-full md:w-1/3 border-2 border-teal-500">
-                    <strong>Industry 5.0</strong>
-                    <p className="text-xs mt-1">Focus: Human-Centric, Sustainability, Resilience.</p>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-green-500 pl-3">
+                                a) IIoT cloud platforms for remote monitoring and control <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 space-y-2">
+                                <li><strong>Connectivity:</strong> Platforms ingest live telemetry via secure protocols (MQTT/AMQP).</li>
+                                <li><strong>Dashboarding:</strong> Provides HMI (Human Machine Interface) on web/mobile to visualize status (Gauges, Trends).</li>
+                                <li><strong>Bi-directional Control:</strong> Allows operators to send commands <em>downstream</em> (e.g., "Change Setpoint", "Reboot") from the cloud to the PLC via the gateway.</li>
+                                <li><strong>Alerting:</strong> Automatic SMS/Email generation based on thresholds (Remote Monitoring).</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-green-500 pl-3">
+                                b) Process of designing and developing a digital twin <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ol class="list-decimal pl-5 mt-2 space-y-2">
+                                <li><strong>Define:</strong> Identify the physical asset and the business goal (e.g., "Predict failure of Turbine X").</li>
+                                <li><strong>Model Construction:</strong> Create a virtual representation. Can be Physics-based (CAD/Stress analysis) or Data-driven (Machine Learning).</li>
+                                <li><strong>Data Integration:</strong> Instrument the physical asset with sensors and map these real-time streams to the virtual model's parameters.</li>
+                                <li><strong>Validation:</strong> Ensure the twin behaves exactly like the real asset under known conditions.</li>
+                                <li><strong>Simulation:</strong> Use the verified twin to run "What-If" scenarios (e.g., "What if load increases 20%?").</li>
+                            </ol>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-green-500 pl-3">
+                                c) Compare features of leading IIoT cloud platforms <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <div class="overflow-x-auto mt-3">
+                                <table class="w-full text-sm text-left border border-slate-200">
+                                    <thead class="bg-slate-100"><tr><th class="p-2 border">Platform</th><th class="p-2 border">Key Focus & Strengths</th></tr></thead>
+                                    <tbody>
+                                        <tr><td class="p-2 border font-bold">Predix (GE)</td><td class="p-2 border">Built for heavy industry (Aviation, Energy). Strongest in <strong>Asset Performance Management (APM)</strong> and physics-based Digital Twins.</td></tr>
+                                        <tr><td class="p-2 border font-bold">ThingWorx (PTC)</td><td class="p-2 border">Focus on Manufacturing. Excel in <strong>Rapid Application Development</strong> (Drag & Drop) and <strong>Augmented Reality (Vuforia)</strong> integration.</td></tr>
+                                        <tr><td class="p-2 border font-bold">Azure IoT</td><td class="p-2 border">Focus on Enterprise IT. Strongest in <strong>Scalability</strong>, Edge Computing (IoT Edge), and integration with business tools (Office 365/Dynamics).</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <p><strong>Concept:</strong> Industry 5.0 recognizes that extreme automation removed the "human touch." It aims to bring humans back into the loop to collaborate with robots, leveraging human creativity alongside robot precision.</p>
-            <p className="mt-2"><strong>Societal Goals:</strong> It aligns with "Society 5.0" (Japan), aiming to use technology to solve aging population issues, pollution, and create a sustainable, resilient economy (Circular Economy).</p>
 
-            <div className="my-8 border-t border-slate-200"></div>
+            <!-- Q4 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q4 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Platform Selection, Twins & Security</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-purple-500 pl-3">
+                                a) Key factors to consider when choosing an IIoT cloud platform <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 space-y-2">
+                                <li><strong>Scalability:</strong> Can it handle 100 devices today and 1 million tomorrow? Auto-scaling capabilities.</li>
+                                <li><strong>Interoperability:</strong> Does it support open standards (MQTT, OPC-UA) or is it a "Walled Garden"?</li>
+                                <li><strong>Edge Capabilities:</strong> Does it support offline logic processing (Edge Computing) if the internet fails?</li>
+                                <li><strong>Security:</strong> End-to-end encryption, compliance (GDPR/HIPAA), and secure device provisioning.</li>
+                                <li><strong>Cost Model:</strong> Pricing structure (Pay-per-message vs Subscription).</li>
+                            </ul>
+                        </div>
 
-            <h3 className="text-lg font-bold text-slate-800 border-l-4 border-teal-500 pl-3 mb-4">b) Smart Definitions (8 Marks)</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                <strong className="text-slate-800 flex items-center gap-2"><Activity size={16} className="text-blue-500"/> Smart Metering</strong>
-                <p className="text-sm text-slate-600 mt-2">Advanced utility meters that measure consumption in real-time and communicate bidirectionally. Enables <strong>Dynamic Pricing</strong> (charging more during peak hours) and remote disconnects.</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                 <strong className="text-slate-800 flex items-center gap-2"><Cloud size={16} className="text-blue-500"/> Smart Irrigation</strong>
-                 <p className="text-sm text-slate-600 mt-2">IoT-based agriculture. Uses soil moisture sensors and weather API forecasts to water crops <strong>only when necessary</strong>, saving 30-50% water compared to timers.</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                 <strong className="text-slate-800 flex items-center gap-2"><Wifi size={16} className="text-blue-500"/> Smart Office</strong>
-                 <p className="text-sm text-slate-600 mt-2">Workspaces with presence sensors. Lights and HVAC turn off automatically when rooms are empty. Meeting rooms are booked via app. Optimizes energy and comfort.</p>
-              </div>
-               <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                 <strong className="text-slate-800 flex items-center gap-2"><Globe size={16} className="text-blue-500"/> Smart Logistics</strong>
-                 <p className="text-sm text-slate-600 mt-2">Complete supply chain visibility. Using GPS + Temperature sensors on shipping containers to track location and ensure "Cold Chain" (goods didn't spoil) integrity.</p>
-              </div>
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-purple-500 pl-3">
+                                b) Challenges and benefits of using IIoT cloud for digital twin <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <div class="grid md:grid-cols-2 gap-4 mt-3">
+                                <div class="bg-green-50 p-4 rounded border border-green-200">
+                                    <strong class="text-green-800">Benefits</strong>
+                                    <ul class="list-disc pl-4 text-sm mt-1">
+                                        <li><strong>Compute Power:</strong> Cloud offers infinite resources for complex simulations.</li>
+                                        <li><strong>Storage:</strong> Stores petabytes of history for model training.</li>
+                                        <li><strong>Collaboration:</strong> Global access for remote experts.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-red-50 p-4 rounded border border-red-200">
+                                    <strong class="text-red-800">Challenges</strong>
+                                    <ul class="list-disc pl-4 text-sm mt-1">
+                                        <li><strong>Latency:</strong> Network lag delays synchronization (Twin lags reality).</li>
+                                        <li><strong>Data Cost:</strong> Uploading high-frequency data is expensive.</li>
+                                        <li><strong>IP Risk:</strong> Putting proprietary CAD models on public cloud.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-purple-500 pl-3">
+                                c) Security and privacy challenges associated with IIoT cloud platforms <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 space-y-2">
+                                <li><strong>Data Breaches:</strong> Centralized cloud storage is a prime target for hackers to steal proprietary manufacturing secrets.</li>
+                                <li><strong>Multi-Tenancy Risks:</strong> In public clouds, your data sits on same hardware as others. Risk of side-channel attacks.</li>
+                                <li><strong>Insecure APIs:</strong> Weak interfaces are the most common entry point for attacks.</li>
+                                <li><strong>Compliance/Residency:</strong> Legal requirement to keep data within country borders (Data Sovereignty).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </QuestionCard>
 
-          {/* Footer */}
-          <footer className="mt-20 pt-10 border-t border-slate-200 text-center text-slate-500 text-sm">
-            <p className="font-semibold">Generated for IIoT Exam Preparation</p>
-            <p className="mt-2 text-slate-400">Detailed Solutions • Interactive Diagrams • Key Concepts</p>
-          </footer>
+            <!-- Q5 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q5 (Option A)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Security: Integrity & Identity</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-red-500 pl-3">
+                                a) Compare and contrast message integrity protection mechanisms <span class="mark-badge">9 Marks</span>
+                            </h4>
+                            <p class="mt-2 text-sm mb-3">Integrity ensures data is not altered in transit.</p>
+                            <table class="w-full text-sm text-left border border-slate-200">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="p-2 border">Mechanism</th>
+                                        <th class="p-2 border">How it works</th>
+                                        <th class="p-2 border">Pros/Cons for IIoT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="p-2 border font-bold">Checksums (CRC)</td>
+                                        <td class="p-2 border">Mathematical sum of bits.</td>
+                                        <td class="p-2 border"><strong>Pros:</strong> Fast, good for noise. <br><strong>Cons:</strong> NOT secure (Easy to forge).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 border font-bold">MAC (Message Authentication Code)</td>
+                                        <td class="p-2 border">Hash function + Secret Key (HMAC).</td>
+                                        <td class="p-2 border"><strong>Pros:</strong> Verifies Integrity AND Authenticity. <br><strong>Cons:</strong> Key management (Need shared key).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 border font-bold">Digital Signatures</td>
+                                        <td class="p-2 border">Asymmetric Crypto (Private Key signs, Public verifies).</td>
+                                        <td class="p-2 border"><strong>Pros:</strong> Non-Repudiation (Highest Security). <br><strong>Cons:</strong> High CPU usage for small sensors.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-red-500 pl-3">
+                                b) Select and implement identity establishment mechanism (Smart Meter) <span class="mark-badge">8 Marks</span>
+                            </h4>
+                            <p class="mt-2 font-bold">Scenario: A Smart Meter connecting to a Utility Grid.</p>
+                            <p class="mt-1"><strong>Selected Mechanism:</strong> Public Key Infrastructure (PKI) using X.509 Certificates.</p>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mt-3">
+                                <h5 class="font-bold text-slate-700 mb-2">Implementation Steps:</h5>
+                                <ol class="list-decimal pl-5 space-y-2 text-sm">
+                                    <li><strong>Manufacturing:</strong> The Utility (Certificate Authority) burns a unique Private Key and a signed Digital Certificate into the meter's secure chip (TPM).</li>
+                                    <li><strong>Deployment:</strong> Meter is installed.</li>
+                                    <li><strong>Handshake:</strong> Meter connects to server and presents its Certificate.</li>
+                                    <li><strong>Verification:</strong> Server checks the digital signature against the CA. If valid, it knows the device is genuine.</li>
+                                    <li><strong>Result:</strong> Rogue devices cannot connect because they lack a signed certificate.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q6 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q6 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Security Definitions & Integrity</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-orange-500 pl-3">
+                                a) Define: i) Identity Establishment, ii) Access Control <span class="mark-badge">9 Marks</span>
+                            </h4>
+                            <div class="space-y-4 mt-3">
+                                <div>
+                                    <strong class="text-orange-700 block">i) Identity Establishment (Authentication)</strong>
+                                    <p>The process of verifying the claim of a subject (user or device) to a specific identity. It answers the question <em>"Who are you?"</em>. In IIoT, this is done via Certificates, API Keys, or Passwords.</p>
+                                </div>
+                                <div>
+                                    <strong class="text-orange-700 block">ii) Access Control (Authorization)</strong>
+                                    <p>The process of determining what an authenticated entity is allowed to do. It answers the question <em>"What can you do?"</em>. Example: An 'Admin' can update firmware, but a 'Viewer' can only read data. Techniques include RBAC (Role-Based) and ABAC (Attribute-Based).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-orange-500 pl-3">
+                                b) Describe how to ensure the integrity of messages in a given IIoT system <span class="mark-badge">8 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Core Technique: Cryptographic Hashing (e.g., SHA-256)</strong></p>
+                            <div class="mt-3">
+                                <p class="font-bold text-sm text-slate-700 mb-2">Process flow:</p>
+                                <ol class="list-decimal pl-5 space-y-2 text-sm">
+                                    <li><strong>Sender:</strong> Takes the message $M$ and a secret key $K$.</li>
+                                    <li><strong>Calculation:</strong> Calculates Hash $H = HMAC(M, K)$.</li>
+                                    <li><strong>Transmission:</strong> Sends Message $M$ and Hash $H$ to receiver.</li>
+                                    <li><strong>Receiver:</strong> Receives $M'$ and $H'$. Calculates its own hash $H_{new} = HMAC(M', K)$.</li>
+                                    <li><strong>Verification:</strong> Compares $H_{new}$ with $H'$. If they match, the message was not altered. If they differ, the message is discarded as corrupt/tampered.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q7 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q7 (Option A)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Robotics & Cyber Manufacturing</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-cyan-500 pl-3">
+                                a) Explain how smart robots improve efficiency/productivity <span class="mark-badge">9 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-3 space-y-2">
+                                <li><strong>Precision & Speed:</strong> Robots perform repetitive tasks (welding, painting) with sub-millimeter accuracy and speed unattainable by humans, reducing rework.</li>
+                                <li><strong>Continuous Operation:</strong> Robots work 24/7/365 without fatigue, breaks, or shift changes, maximizing asset utilization.</li>
+                                <li><strong>Collaboration (Cobots):</strong> Collaborative robots work safely alongside humans. The robot lifts the heavy load (Strength) while the human guides it (Dexterity), combining the best of both.</li>
+                                <li><strong>Data Integration:</strong> Smart robots report their own health to the cloud, enabling predictive maintenance preventing downtime.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-cyan-500 pl-3">
+                                b) Assess challenges and benefits of Cyber Manufacturing Systems <span class="mark-badge">8 Marks</span>
+                            </h4>
+                            <div class="grid md:grid-cols-2 gap-6 mt-3">
+                                <div>
+                                    <h5 class="font-bold text-cyan-800 border-b border-cyan-200 mb-2">Benefits</h5>
+                                    <ul class="list-disc pl-4 text-sm space-y-1">
+                                        <li><strong>Mass Customization:</strong> "Batch Size of One". Machines reconfigure automatically for each product.</li>
+                                        <li><strong>Agility:</strong> Rapid response to market changes or supply chain disruptions.</li>
+                                        <li><strong>Optimization:</strong> AI-driven reduction of waste and energy usage.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-red-800 border-b border-red-200 mb-2">Challenges</h5>
+                                    <ul class="list-disc pl-4 text-sm space-y-1">
+                                        <li><strong>Cybersecurity:</strong> Connecting factories to the net risks Ransomware attacks (e.g., Colonial Pipeline).</li>
+                                        <li><strong>Skill Gap:</strong> Shortage of workforce skilled in both Mechanics and IT.</li>
+                                        <li><strong>Legacy Integration:</strong> Difficulty connecting 30-year-old machines to modern cloud systems.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q8 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wide">Q8 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Industry 5.0 & Smart Apps</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                a) Concept of Industry 5.0 (Society 5.0) and relation to 4.0 <span class="mark-badge">9 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Concept:</strong> Industry 5.0 builds upon Industry 4.0 (Automation/Efficiency) but re-introduces the <strong>Human</strong> back into the loop. It moves from "Efficiency" to <strong>"Sustainability, Resilience, and Human-Centricity"</strong>.</p>
+                            <p class="mt-2"><strong>Societal Challenges Addressed:</strong></p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>Aging Population:</strong> Using exoskeleton robots to help older workers.</li>
+                                <li><strong>Pollution:</strong> Circular economy and green manufacturing.</li>
+                                <li><strong>Job Satisfaction:</strong> Removing the "robot-like" work from humans, letting them be creative.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                b) Define terms: Metering, Irrigation, Office, Logistics <span class="mark-badge">8 Marks</span>
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                                <div class="bg-slate-50 p-3 rounded border">
+                                    <strong class="text-slate-800 block">Smart Metering</strong>
+                                    <span class="text-sm">Advanced utility meters measuring usage in real-time, enabling bidirectional comms and Dynamic Pricing.</span>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded border">
+                                    <strong class="text-slate-800 block">Smart Irrigation</strong>
+                                    <span class="text-sm">Precision agriculture using soil moisture sensors + weather APIs to water crops only when needed, saving 50% water.</span>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded border">
+                                    <strong class="text-slate-800 block">Smart Office</strong>
+                                    <span class="text-sm">IoT workplaces managing HVAC/Lighting based on occupancy sensors to optimize comfort and energy.</span>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded border">
+                                    <strong class="text-slate-800 block">Smart Logistics</strong>
+                                    <span class="text-sm">Using GPS/RFID to track location and condition (Temp/Humidity) of goods to ensure Cold Chain integrity.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
-      </main>
-    </div>
-  );
-};
 
-export default App;
+        <!-- ================= MAY/JUN 2024 PAPER ================= -->
+        <div id="content-may2024" class="hidden space-y-12">
+            
+            <!-- Q1 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q1</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Architecture & Frameworks</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                a) Define IIoT and explain components of architecture <span class="mark-badge">8 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Definition:</strong> The Industrial Internet of Things (IIoT) is the extension of IoT to industrial sectors (manufacturing, energy, logistics). It focuses on M2M communication, Big Data, and Machine Learning to enable efficiency, reliability, and intelligence.</p>
+                            <p class="mt-2 font-bold text-slate-700">Components:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>Intelligent Assets:</strong> Sensors, PLCs, Edge devices that generate data.</li>
+                                <li><strong>Data Communications:</strong> Gateways, Protocols (MQTT, OPC UA), Networks (5G).</li>
+                                <li><strong>Analytics/Applications:</strong> Cloud platforms processing data for insights.</li>
+                                <li><strong>People:</strong> The ultimate decision-makers acting on insights.</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                b) Draw and explain the Reference Architecture of IIoT <span class="mark-badge">5 Marks</span>
+                            </h4>
+                            <div class="my-4 bg-indigo-50 border border-indigo-100 p-4 rounded-lg flex flex-col items-center">
+                                <div class="flex gap-4 items-center w-full justify-center text-xs font-bold text-center">
+                                    <div class="bg-white p-4 rounded border border-blue-300 w-1/3">
+                                        <span class="text-blue-700 block text-lg mb-1"><i class="ph ph-cpu"></i></span>
+                                        EDGE TIER<br><span class="font-normal text-slate-500">Sensors, Actuators, Proximity Net</span>
+                                    </div>
+                                    <i class="ph ph-arrow-right text-slate-400 text-xl"></i>
+                                    <div class="bg-white p-4 rounded border border-purple-300 w-1/3">
+                                        <span class="text-purple-700 block text-lg mb-1"><i class="ph ph-cloud"></i></span>
+                                        PLATFORM TIER<br><span class="font-normal text-slate-500">Analytics, Device Mgmt, Data Aggregation</span>
+                                    </div>
+                                    <i class="ph ph-arrow-right text-slate-400 text-xl"></i>
+                                    <div class="bg-white p-4 rounded border border-green-300 w-1/3">
+                                        <span class="text-green-700 block text-lg mb-1"><i class="ph ph-buildings"></i></span>
+                                        ENTERPRISE TIER<br><span class="font-normal text-slate-500">ERP, CRM, End-User Apps</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li><strong>Edge Tier:</strong> Collects data (OT).</li>
+                                <li><strong>Platform Tier:</strong> Processes and manages data/devices (IT).</li>
+                                <li><strong>Enterprise Tier:</strong> Consumes data for business logic (Business).</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                c) Explain integration of WSN into IIoT architecture <span class="mark-badge">5 Marks</span>
+                            </h4>
+                            <p class="mt-2">WSNs form the <strong>Capillary Network</strong> within the Edge Tier. They bridge the "Last Inch" connectivity gap where wires cannot reach.</p>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>Gateway Role:</strong> The WSN Sink node connects to the IIoT Gateway.</li>
+                                <li><strong>Protocol Conversion:</strong> Gateway converts WSN protocols (Zigbee/6LoWPAN) to IP.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q2 OR -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q2 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">IIAF & Architecture Layers</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                a) Discuss Industrial Internet Architecture Framework (IIAF) <span class="mark-badge">10 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Purpose:</strong> Created by IIC (Industrial Internet Consortium) to provide a standard methodology for designing IIoT systems, ensuring interoperability between vendors.</p>
+                            <p class="mt-2 font-bold text-slate-700">Key Principles (The Viewpoints):</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-2">
+                                <li><strong>Business Viewpoint:</strong> Focuses on stakeholders and business vision/values. (Why are we doing this?)</li>
+                                <li><strong>Usage Viewpoint:</strong> Describes user activities and system usage sequences. (How is it used?)</li>
+                                <li><strong>Functional Viewpoint:</strong> Break down into functional blocks (Control, Operations, Information). (What does it do?)</li>
+                                <li><strong>Implementation Viewpoint:</strong> The physical technologies and components used. (What is it built of?)</li>
+                            </ul>
+                            <p class="mt-2">It guides design by ensuring all aspects (Business to Tech) are aligned.</p>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                b) Discuss Layers of IIoT (Sensing, Processing, Comm, Networking) <span class="mark-badge">8 Marks</span>
+                            </h4>
+                            <div class="space-y-3 mt-3">
+                                <div class="bg-slate-50 p-3 rounded">
+                                    <strong class="block text-slate-800">1. IIoT Sensing Layer</strong>
+                                    Identification and data collection. Includes Sensors (Temperature, RFID) and Actuators. The "Skin" of the system.
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded">
+                                    <strong class="block text-slate-800">2. IIoT Processing Layer (Edge/Fog)</strong>
+                                    Middleware layer. Filters raw data to remove noise, converts formats, and makes local decisions (e.g., emergency stop). Reduces latency.
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded">
+                                    <strong class="block text-slate-800">3. IIoT Communication Layer</strong>
+                                    Defines <em>how</em> devices talk. Includes protocols like MQTT (Publish/Subscribe), CoAP (Restricted Web), and OPC-UA (Machine Data).
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded">
+                                    <strong class="block text-slate-800">4. IIoT Networking Layer</strong>
+                                    The infrastructure transporting the bits. Includes 4G/5G, Wi-Fi 6, Ethernet, and Routers/Switches handling IP addressing.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q3</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Platforms & Visualizations</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                a) Compare IIoT cloud platforms (COT, Predix, ThingWorx, Azure) <span class="mark-badge">8 Marks</span>
+                            </h4>
+                            <table class="w-full text-sm text-left border border-slate-200 mt-2">
+                                <thead class="bg-slate-100"><tr><th class="p-2 border">Platform</th><th class="p-2 border">Description</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="p-2 border font-bold">Cloud of Things (CoT)</td><td class="p-2 border">Often Telecom-led (Deutsche Telekom). Focus on simple connectivity, device management, and white-labeling for smaller industries.</td></tr>
+                                    <tr><td class="p-2 border font-bold">Predix (GE)</td><td class="p-2 border">Industrial-native. Best for high-value assets (Turbines). Deep focus on Physics-based Digital Twins.</td></tr>
+                                    <tr><td class="p-2 border font-bold">ThingWorx (PTC)</td><td class="p-2 border">Best UX/UI tools. Focus on AR (Vuforia) and factory floor visualization. Rapid app development.</td></tr>
+                                    <tr><td class="p-2 border font-bold">Microsoft Azure</td><td class="p-2 border">Hyperscaler. Best integration with Enterprise IT (Office/Dynamics). Massive global scale and AI services.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                b) Describe data visualization techniques in IIoT <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2">Techniques to represent complex sensor data for human operators:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>Gauges/Dials:</strong> For instantaneous single values (Speed, Pressure). Quick status check.</li>
+                                <li><strong>Time-Series Charts:</strong> Line graphs showing trends over time (Temperature over 24h). Essential for spotting anomalies.</li>
+                                <li><strong>Heatmaps:</strong> Color-coded overlays on a factory floor map showing problem areas (Red = Hot/Error).</li>
+                                <li><strong>3D Digital Twins:</strong> Spatial representation of the asset, allowing rotation and internal viewing.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-indigo-500 pl-3">
+                                c) Differentiate SaaS, PaaS, IaaS <span class="mark-badge">3 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>IaaS (Infrastructure):</strong> You rent the hardware (VMs/Storage). You manage OS + Apps. (e.g., AWS EC2).</li>
+                                <li><strong>PaaS (Platform):</strong> You rent the tools to build apps. You manage Apps only. (e.g., Google App Engine).</li>
+                                <li><strong>SaaS (Software):</strong> You rent the finished software. You manage nothing. (e.g., Salesforce, Gmail).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q4 OR -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q4 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Analytics & Digital Twins</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-purple-500 pl-3">
+                                a) Role of Data Analytics in optimizing IIoT <span class="mark-badge">10 Marks</span>
+                            </h4>
+                            <p class="mt-2">Data Analytics extracts "Wisdom" from raw "Data".</p>
+                            <p class="mt-2 font-bold text-slate-700">Types of Analytics:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-2">
+                                <li><strong>Descriptive:</strong> "What happened?" (e.g., The motor stopped at 10 AM). Visualization phase.</li>
+                                <li><strong>Diagnostic:</strong> "Why did it happen?" (e.g., Correlation analysis shows Temp spiked before stop).</li>
+                                <li><strong>Predictive:</strong> "What will happen?" (e.g., ML Model predicts bearing failure in 48 hours). <strong>Critical for Predictive Maintenance.</strong></li>
+                                <li><strong>Prescriptive:</strong> "What should we do?" (e.g., System automatically orders parts and schedules downtime).</li>
+                            </ul>
+                            <p class="mt-2"><strong>Impact:</strong> Reduces downtime, optimizes energy usage, and improves product quality.</p>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-purple-500 pl-3">
+                                b) Explain concept, need, and benefits of Digital Twin <span class="mark-badge">7 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Concept:</strong> A living digital replica of a physical entity.</p>
+                            <p class="mt-1"><strong>Need:</strong> Physical testing is expensive and dangerous. We need a safe sandbox to test changes.</p>
+                            <p class="mt-1"><strong>Benefits:</strong></p>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>Remote Monitoring:</strong> View asset status from anywhere.</li>
+                                <li><strong>Simulation:</strong> Test scenarios without risking the hardware.</li>
+                                <li><strong>Lifecycle Management:</strong> Track asset health from creation to disposal.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q5 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q5</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Security Importance & Management</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-red-500 pl-3">
+                                a) Importance of security in IIoT and consequences of breaches <span class="mark-badge">10 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Importance:</strong> Unlike standard IT, IIoT interacts with the physical world. Security is not just about data privacy; it's about <strong>Safety</strong>.</p>
+                            <p class="mt-2 font-bold text-slate-700">Consequences of Breaches:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-2">
+                                <li><strong>Physical Safety:</strong> Hackers overriding safety controls in a chemical plant could cause explosions or injury.</li>
+                                <li><strong>Operational Downtime:</strong> Ransomware (e.g., LockerGoga) can brick controllers, stopping production for weeks.</li>
+                                <li><strong>Environmental Damage:</strong> Opening valves in a water treatment plant or pipeline.</li>
+                                <li><strong>IP Theft:</strong> Stealing proprietary formulas or manufacturing processes.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-red-500 pl-3">
+                                b) Management aspects of cybersecurity and stakeholders <span class="mark-badge">7 Marks</span>
+                            </h4>
+                            <p class="mt-2">Cybersecurity is a process, not a product. It requires:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-2">
+                                <li><strong>Risk Assessment:</strong> Identifying critical assets and vulnerabilities.</li>
+                                <li><strong>Defense in Depth:</strong> Multiple layers of security (Physical, Network, Application).</li>
+                            </ul>
+                            <p class="mt-2 font-bold text-slate-700">Stakeholders:</p>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>OT Engineers:</strong> Understand the machine physics and safety constraints.</li>
+                                <li><strong>IT Security Admins:</strong> Understand network defense, firewalls, and patching.</li>
+                                <li><strong>Management/C-Suite:</strong> Must provide budget and enforce policy compliance.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q6 OR -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q6 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Access Control & Identity</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-orange-500 pl-3">
+                                a) Access control in IIoT, mechanisms and techniques <span class="mark-badge">10 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Concept:</strong> Restricting what authorized users/devices can do.</p>
+                            <p class="mt-2 font-bold text-slate-700">Mechanisms:</p>
+                            <ul class="list-disc pl-5 mt-1 space-y-2">
+                                <li><strong>RBAC (Role-Based Access Control):</strong> Assigns permissions to roles (Admin, Operator, Viewer). Users are assigned roles. Best for manageability.</li>
+                                <li><strong>ABAC (Attribute-Based Access Control):</strong> More dynamic. Grants access based on attributes (Time of day, User Location, Device Type). e.g., "Allow remote control only if Operator is on-site".</li>
+                                <li><strong>Network ACLs:</strong> Firewall rules allowing specific IP addresses to talk to specific ports (White-listing).</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-orange-500 pl-3">
+                                b) Importance of identity establishment and protocols <span class="mark-badge">7 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Importance:</strong> If you don't know <em>who</em> is connecting, you can't enforce security. "Spoofing" involves a hacker pretending to be a sensor to inject bad data.</p>
+                            <p class="mt-2 font-bold text-slate-700">Methods/Protocols:</p>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>X.509 Certificates (PKI):</strong> The gold standard. Digital IDs signed by a trusted authority.</li>
+                                <li><strong>TLS (Transport Layer Security):</strong> Uses certificates to create an encrypted tunnel. Mutual TLS (mTLS) authenticates both server and device.</li>
+                                <li><strong>OAuth 2.0 / OIDC:</strong> Modern token-based authentication for users and APIs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q7 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q7</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Smart Applications & Ind 4.0</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                a) Smart Logistics impact <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2">Uses IoT (GPS, RFID, Environmental Sensors) to transform supply chains.</p>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>Real-time Visibility:</strong> Knowing exactly where goods are.</li>
+                                <li><strong>Condition Monitoring:</strong> Ensuring Cold Chain (Temp/Humidity) for food/pharma. Reduces spoilage.</li>
+                                <li><strong>Route Optimization:</strong> Dynamic rerouting based on traffic/weather.</li>
+                            </ul>
+                        </div>
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                b) Smart Irrigation benefits <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2">Precision Agriculture technology.</p>
+                            <ul class="list-disc pl-5 mt-1">
+                                <li><strong>Mechanism:</strong> Uses Soil Moisture Sensors + Weather Forecast APIs.</li>
+                                <li><strong>Logic:</strong> Waters only when soil is dry AND no rain is forecast.</li>
+                                <li><strong>Benefits:</strong> Saves 30-50% water, prevents root rot (overwatering), reduces fertilizer runoff.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                c) Industry 4.0 characteristics and design principles <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2">
+                                <li><strong>Interconnection:</strong> Machines, sensors, and people connected via IoT.</li>
+                                <li><strong>Information Transparency:</strong> Digital Twin provides a virtual copy of the real world.</li>
+                                <li><strong>Technical Assistance:</strong> Robots/AI assisting humans in tasks.</li>
+                                <li><strong>Decentralized Decisions:</strong> Cyber-physical systems make simple decisions on their own.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q8 OR -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full uppercase tracking-wide">Q8 (Option B)</span>
+                        <h3 class="text-xl font-bold text-slate-800 mt-2">Cyber Mfg, Healthcare & Ind 5.0</h3>
+                    </div>
+                </div>
+                <div class="p-8 answer-section">
+                    <div class="prose max-w-none text-slate-600">
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                a) Cyber Manufacturing Systems importance <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Definition:</strong> Integration of physical machinery with computational algorithms and networking.</p>
+                            <p class="mt-1"><strong>Importance:</strong> Enables "Smart Factories" capable of <strong>Mass Customization</strong> (Batch Size of One). Machines self-optimize and order their own maintenance, leading to near-zero downtime.</p>
+                        </div>
+                        <div class="mb-8">
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                b) IoT in Healthcare Service Industry <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2">
+                                <li><strong>Remote Patient Monitoring:</strong> Wearables (Heart rate, Glucose) sending data to doctors. Reduces hospital visits.</li>
+                                <li><strong>Asset Tracking:</strong> Tracking expensive equipment (Defibrillators, Wheelchairs) in hospitals.</li>
+                                <li><strong>Smart Beds:</strong> Detect patient presence and adjust settings automatically.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="flex justify-between items-center font-bold text-slate-800 text-lg border-l-4 border-teal-500 pl-3">
+                                c) Industry 5.0 (Society 5.0) impact <span class="mark-badge">6 Marks</span>
+                            </h4>
+                            <p class="mt-2"><strong>Shift from Ind 4.0:</strong> Moving from "Efficiency & Automation" to <strong>"Human-Centricity, Sustainability, and Resilience"</strong>.</p>
+                            <p class="mt-1"><strong>Impact:</strong> Re-integrates humans into the workflow (using Cobots) to leverage creativity. Focuses on solving societal issues (aging population, climate change) rather than just profit.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Interactions Script -->
+    <script>
+        const studyToggle = document.getElementById('studyModeToggle');
+        const knob = document.getElementById('toggleKnob');
+        let studyMode = false;
+
+        // Tab Switching Logic
+        function switchTab(paperId) {
+            // Hide all content with fade effect
+            const contents = ['nov2023', 'may2024'];
+            contents.forEach(id => {
+                const el = document.getElementById('content-' + id);
+                if(id === paperId) {
+                    el.classList.remove('hidden');
+                    // Small timeout to allow display:block to apply before opacity transition if we added one
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Update Tab Styles
+            contents.forEach(t => {
+                const tabEl = document.getElementById('tab-' + t);
+                if (t === paperId) {
+                    tabEl.classList.add('tab-active');
+                    tabEl.classList.remove('tab-inactive');
+                } else {
+                    tabEl.classList.remove('tab-active');
+                    tabEl.classList.add('tab-inactive');
+                }
+            });
+        }
+
+        // Study Mode Logic
+        studyToggle.addEventListener('click', () => {
+            studyMode = !studyMode;
+            
+            // UI Toggle Animation
+            if (studyMode) {
+                studyToggle.classList.replace('bg-slate-300', 'bg-blue-600');
+                knob.classList.replace('translate-x-1', 'translate-x-6');
+            } else {
+                studyToggle.classList.replace('bg-blue-600', 'bg-slate-300');
+                knob.classList.replace('translate-x-6', 'translate-x-1');
+            }
+
+            // Hide/Show Answer Sections
+            const answers = document.querySelectorAll('.answer-section');
+            answers.forEach(ans => {
+                if (studyMode) {
+                    ans.classList.add('hidden-answer');
+                } else {
+                    ans.classList.remove('hidden-answer');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
